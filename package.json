@@ -1,0 +1,24 @@
+{
+  "name": "translator3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "t3.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@textlint/markdown-to-ast": "^13.3.2",
+    "playwright": "^1.34.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.42.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "prettier": "2.8.8",
+    "stylelint": "^15.7.0",
+    "stylelint-config-standard": "^33.0.0"
+  }
+}
