@@ -92,18 +92,23 @@ const translate = async (str) => {
 
   for await (const md of ast.children) {
     if (transTypes.includes(md.type)) {
-      const input = md.raw;
       // возможно понадобится пауза, чтоб
       // переводчик не принял нас за спамеров
-      // sleep(3000);
-      const result = await translate(input);
+      sleep(5000);
 
-      console.log(
-        `Translated ${Math.round(
-          (100 * index) / ast.children.length
-        )}%: ${result}`
-      );
-      translated += `${result}\n\n`; // накапливаем перевденное
+      try {
+        const result = await translate(md.raw);
+        console.log(
+          `Translated ${Math.round(
+            (100 * index) / ast.children.length
+          )}%: ${result}`
+        );
+        translated += `${result}\n\n`; // накапливаем перевденное
+      } catch (e) {
+        // перевод не получился, копируем непереведенный кусок
+        console.log(`Error translate node ${md.type}: ${e}`);
+        translated += `${md.raw}\n\n`;
+      }
     } else {
       // что переводить не нужно, так и сохраняем
       console.log(`Ignored node ${md.type}`);
