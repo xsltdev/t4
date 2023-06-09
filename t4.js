@@ -3,6 +3,9 @@ const parser = require("@textlint/markdown-to-ast").parse;
 const fs = require("fs");
 const { chromium } = require("playwright");
 
+// максимальная длина блока для перевода
+const MAX_BLOCK_LENGTH = 2000;
+
 /**
  * Пауза
  * @param {*} ms длительность паузы в мс
@@ -87,32 +90,70 @@ const translate = async (str) => {
   // какие блоки переводим
   const transTypes = ["Paragraph", "BlockQuote", "Header", "List"];
 
+  // готовим блоки для перевода
+  // ==========================
+  const blocks = ast.children.reduce(
+    (acc, curr) => {
+      if (transTypes.includes(curr.type)) {
+        // если текущий элемент нужно перевести
+        if (
+          acc[acc.length - 1].data.length + curr.raw.length <
+            MAX_BLOCK_LENGTH &&
+          acc[acc.length - 1].needTranslate
+        ) {
+          // длина текста не превышает граничения переводчика
+          acc[acc.length - 1].data += `\n\n${curr.raw}`;
+        } else {
+          // длина превышает или предыдущий блок не нужно было переводить,
+          // то делаем новый блок
+          acc.push({
+            needTranslate: true,
+            data: curr.raw,
+          });
+        }
+      } else {
+        acc.push({
+          needTranslate: false,
+          data: curr.raw,
+        });
+      }
+      return acc;
+    },
+    [
+      {
+        data: "",
+        needTranslate: false,
+      },
+    ]
+  );
+
+  // переводим готовые блоки
+  // ============================
+
   let translated = ""; // готовый перевод
   let index = 0; // сколько блоков перевдено
 
-  for await (const md of ast.children) {
-    if (transTypes.includes(md.type)) {
+  for await (const block of blocks) {
+    if (block.needTranslate) {
       // возможно понадобится пауза, чтоб
       // переводчик не принял нас за спамеров
       sleep(5000);
 
       try {
-        const result = await translate(md.raw);
+        const result = await translate(block.data);
         console.log(
-          `Translated ${Math.round(
-            (100 * index) / ast.children.length
-          )}%: ${result}`
+          `Translated ${Math.round((100 * index) / blocks.length)}%: ${result}`
         );
         translated += `${result}\n\n`; // накапливаем перевденное
       } catch (e) {
         // перевод не получился, копируем непереведенный кусок
-        console.log(`Error translate node ${md.type}: ${e}`);
-        translated += `${md.raw}\n\n`;
+        console.log(`Error translate node ${index}: ${e}`);
+        translated += `${block.data}\n\n`;
       }
     } else {
       // что переводить не нужно, так и сохраняем
-      console.log(`Ignored node ${md.type}`);
-      translated += `${md.raw}\n\n`;
+      console.log(`Ignored node ${index}`);
+      translated += `${block.data}\n\n`;
     }
     index += 1;
   }
