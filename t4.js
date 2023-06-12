@@ -142,17 +142,17 @@ const translate = async (str) => {
       try {
         const result = await translate(block.data);
         console.log(
-          `Translated ${Math.round((100 * index) / blocks.length)}%: ${result}`
+          `+ ${index + 1}/${blocks.length} translated`
         );
         translated += `${result}\n\n`; // накапливаем перевденное
       } catch (e) {
         // перевод не получился, копируем непереведенный кусок
-        console.log(`Error translate node ${index}: ${e}`);
+        console.log(`? + ${index + 1}/${blocks.length} error`);
         translated += `${block.data}\n\n`;
       }
     } else {
       // что переводить не нужно, так и сохраняем
-      console.log(`Ignored node ${index}`);
+      console.log(`- ${index + 1}/${blocks.length} skipped`);
       translated += `${block.data}\n\n`;
     }
     index += 1;
