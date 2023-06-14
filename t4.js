@@ -88,7 +88,7 @@ const translate = async (str) => {
   const ast = parser(markdown);
 
   // какие блоки переводим
-  const transTypes = ["Paragraph", "BlockQuote", "Header", "List"];
+  const transTypes = ["Paragraph", "BlockQuote", "Header", "List", "Table"];
 
   // готовим блоки для перевода
   // ==========================
