@@ -15,6 +15,13 @@ function sleep(ms) {
   while (Date.now() - start < ms);
 }
 
+const normalize = (node) => {
+  if (node.type !== "List") {
+    return node.raw.replace("\n", " ");
+  }
+  return node.raw;
+};
+
 /**
  * Перевос английского на русский
  * @param {*} str английский источник
@@ -79,7 +86,9 @@ const translate = async (str) => {
   return res[0].replace("\n\n", "\n");
 };
 
-// основной скрипт
+/**
+ * основной скрипт
+ */
 (async () => {
   // загружаем и парсим маркдаун
   const inputPath = process.argv[2];
@@ -99,22 +108,23 @@ const translate = async (str) => {
         if (
           acc[acc.length - 1].data.length + curr.raw.length <
             MAX_BLOCK_LENGTH &&
-          acc[acc.length - 1].needTranslate
+          acc[acc.length - 1].needTranslate &&
+          !curr.raw.startsWith("<")
         ) {
-          // длина текста не превышает граничения переводчика
-          acc[acc.length - 1].data += `\n\n${curr.raw}`;
+          // длина текста не превышает ограничения переводчика
+          acc[acc.length - 1].data += `\n\n${normalize(curr)}`;
         } else {
           // длина превышает или предыдущий блок не нужно было переводить,
           // то делаем новый блок
           acc.push({
             needTranslate: true,
-            data: curr.raw,
+            data: normalize(curr),
           });
         }
       } else {
         acc.push({
           needTranslate: false,
-          data: curr.raw,
+          data: normalize(curr),
         });
       }
       return acc;
@@ -141,17 +151,18 @@ const translate = async (str) => {
 
       try {
         const result = await translate(block.data);
-        console.log(
-          `+ ${index + 1}/${blocks.length} translated`
-        );
+        // eslint-disable-next-line no-console
+        console.log(`+ ${index + 1}/${blocks.length} translated`);
         translated += `${result}\n\n`; // накапливаем перевденное
       } catch (e) {
         // перевод не получился, копируем непереведенный кусок
+        // eslint-disable-next-line no-console
         console.log(`? + ${index + 1}/${blocks.length} error`);
         translated += `${block.data}\n\n`;
       }
     } else {
       // что переводить не нужно, так и сохраняем
+      // eslint-disable-next-line no-console
       console.log(`- ${index + 1}/${blocks.length} skipped`);
       translated += `${block.data}\n\n`;
     }
@@ -160,5 +171,6 @@ const translate = async (str) => {
 
   // сохраняем перевод в файл
   fs.writeFileSync(`ru.${inputPath}`, translated, "utf8");
+  // eslint-disable-next-line no-console
   console.log(`===========================`);
 })();
