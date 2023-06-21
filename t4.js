@@ -103,7 +103,7 @@ const translate = async (str) => {
   // ==========================
   const blocks = ast.children.reduce(
     (acc, curr) => {
-      if (transTypes.includes(curr.type)) {
+      if (transTypes.includes(curr.type) && curr.raw.length < MAX_BLOCK_LENGTH) {
         // если текущий элемент нужно перевести
         if (
           acc[acc.length - 1].data.length + curr.raw.length <
